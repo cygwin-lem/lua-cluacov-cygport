@@ -1,0 +1,113 @@
+NAME="lua-cluacov"
+VERSION=0.1.2
+RELEASE=1
+CATEGORY="Lua"
+SUMMARY="C extensions for LuaCov"
+DESCRIPTION="\
+Optional C extensions for LuaCov, improving performance and reducing
+number of lines incorrectly marked as missed. Depends on LuaCov.
+"
+HOMEPAGE="https://github.com/luarocks/cluacov/"
+
+GIT_REPO="https://github.com/luarocks/cluacov"
+declare -A GIT_DATEHASH_BY_NAME=(
+  # git log --date=iso-strict --format='%cd/%H' -1
+  [0.1.2p1]=2020-08-20T18:56:49-03:00/2a1178a535727acad7bf358b6bcffd9ac139aad4
+  [0.1.2]=2020-08-20T18:55:10-03:00/0.1.2
+)
+REV_HASH="${GIT_DATEHASH_BY_NAME[${VERSION}]#*/}"
+REV_DATE="${GIT_DATEHASH_BY_NAME[${VERSION}]%/*}"
+REV_DATE_SHORT="${REV_DATE%%T*}"
+GIT_BASENAME="${GIT_REPO##*/}"
+SRC_URI="${GIT_REPO}/archive/${REV_HASH}/${GIT_BASENAME}-${VERSION}.tar.gz"
+SRC_DIR="${GIT_BASENAME}-${REV_HASH#v}"
+
+SRC_URI+=" Makefile"
+
+################################
+LUA_VERSIONS="5.3:5.4"
+LUA_PKG_NAME="cluacov"
+source lua.experiment
+
+################################
+## Patch files
+################################
+# Patch filenames are in a default style of 'git format-patch'
+PATCH_URI=$(\
+  find -maxdepth 1 -type f -name '[0-9][0-9][0-9][0-9]-*.patch' \
+  | sort \
+)
+# Additional patches, if any
+PATCH_URI+="
+  https://github.com/luarocks/cluacov/commit/2a1178a535727acad7bf358b6bcffd9ac139aad4.patch
+"
+
+################################
+## Requirements for building
+################################
+BUILD_REQUIRES="\
+  lua53-devel\
+  lua53-luacov\
+\
+  lua54-devel\
+  lua54-luacov\
+"
+# TEST_REQUIRES="\
+# "
+
+################################
+ABI=0
+
+
+################################
+_CYGPORT_RESTRICT_postinst_doc_=1
+
+set_packages_lua() {
+  __add_pkg "lua${LUA_VERSION_CYG}-${LUA_PKG_NAME}"
+  __set_pkg_property . CONTENTS "
+    usr/share/doc/lua${LUA_VERSION_CYG}-${LUA_PKG_NAME}/
+    usr/*/lua/${LUA_VERSION}/
+  "
+  __set_pkg_property . REQUIRES "lua${LUA_VERSION_CYG}"
+
+  __append_pkg_property . REQUIRES "\
+    lua${LUA_VERSION_CYG}-luacov\
+  "
+}
+
+set_packages_lua_versions ${LUA_VERSIONS} ${LUA_PKG_NAME}
+
+################################
+src_compile_lua() {
+  mkdir -p ${B}/${LUA_VERSION}
+  cd  ${B}/${LUA_VERSION}
+
+  lndirs ${S} .
+
+  cygmake \
+    LUA_VERSION=${LUA_VERSION} \
+    LUA_CFLAGS=${LUA_CFLAGS} \
+    LUA_LIBS=${LUA_LIBS} \
+  ;
+}
+
+################################
+src_install_lua() {
+  cd ${B}/${LUA_VERSION}
+
+  insinto ${LUA_SCRIPTDIR}/${LUA_PKG_NAME}
+  doins src/cluacov/*.lua
+  exeinto ${LUA_LIBDIR}/${LUA_PKG_NAME}
+  doexe ${LUA_VERSION}/cluacov/*.so
+
+  dodoc LICENSE *.md *.rockspec
+}
+
+################################
+src_test_lua() {
+  cd ${B}/${LUA_VERSION}
+
+  echo "No test suite."
+}
+
+################################
