@@ -25,7 +25,7 @@ SRC_DIR="${GIT_BASENAME}-${REV_HASH#v}"
 SRC_URI+=" Makefile"
 
 ################################
-LUA_VERSIONS="5.3:5.4"
+LUA_VERSIONS="5.1:5.2:5.3:5.4"
 LUA_PKG_NAME="cluacov"
 source lua.experiment
 
@@ -46,11 +46,10 @@ PATCH_URI+="
 ## Requirements for building
 ################################
 BUILD_REQUIRES="\
+  lua51-devel\
+  lua52-devel\
   lua53-devel\
-  lua53-luacov\
-\
   lua54-devel\
-  lua54-luacov\
 "
 # TEST_REQUIRES="\
 # "
@@ -61,19 +60,6 @@ ABI=0
 
 ################################
 _CYGPORT_RESTRICT_postinst_doc_=1
-
-set_packages_lua() {
-  __add_pkg "lua${LUA_VERSION_CYG}-${LUA_PKG_NAME}"
-  __set_pkg_property . CONTENTS "
-    usr/share/doc/lua${LUA_VERSION_CYG}-${LUA_PKG_NAME}/
-    usr/*/lua/${LUA_VERSION}/
-  "
-  __set_pkg_property . REQUIRES "lua${LUA_VERSION_CYG}"
-
-  __append_pkg_property . REQUIRES "\
-    lua${LUA_VERSION_CYG}-luacov\
-  "
-}
 
 set_packages_lua_versions ${LUA_VERSIONS} ${LUA_PKG_NAME}
 
